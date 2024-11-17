@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'splash_screen.dart';
-import 'main_screen.dart';
+import 'home_screen.dart';
+import 'journal_screen.dart';
 
 void main() {
   runApp(VeloraApp());
@@ -10,6 +11,7 @@ class VeloraApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Velora App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -17,7 +19,8 @@ class VeloraApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => SplashScreen(),
-        '/main': (context) => MainScreen(),
+        '/home': (context) => HomeScreen(),
+        '/journal': (context) => JournalScreen(),
       },
     );
   }
