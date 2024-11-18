@@ -129,6 +129,7 @@ class HomeScreen extends StatelessWidget {
                                   onPressed: () {
                                     // Define your button action here
                                     print("Purple button pressed");
+                                    Navigator.pushNamed(context, '/chat');
                                   },
                                   style: TextButton.styleFrom(
                                     backgroundColor: Colors.transparent, // Make button transparent to see the white container

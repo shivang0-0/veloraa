@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'splash_screen.dart';
 import 'home_screen.dart';
 import 'journal_screen.dart';
+import 'chat_screen.dart';
 
 void main() {
   runApp(VeloraApp());
@@ -21,6 +22,7 @@ class VeloraApp extends StatelessWidget {
         '/': (context) => SplashScreen(),
         '/home': (context) => HomeScreen(),
         '/journal': (context) => JournalScreen(),
+        '/chat': (context) => Chatbot(),
       },
     );
   }
