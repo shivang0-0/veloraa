@@ -8,6 +8,7 @@ import 'journal_screen.dart';
 import 'chat_screen.dart';
 import 'signup_screen.dart';
 import 'login_screen.dart';
+import 'profile_screen.dart';
 
 // ...
 
@@ -38,6 +39,7 @@ class VeloraApp extends StatelessWidget {
         '/chat': (context) => Chatbot(),
         '/signup' : (context) => SignupScreen(),
         '/login' : (context) => LoginScreen(),
+        '/profile' : (context) => ProfileScreen(),
       },
     );
   }

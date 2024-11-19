@@ -1,37 +1,184 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  // Variables to store user data
+  String? userName;
+  String? userProfileImage;
+  bool isLoading = true;
+
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  // Method to fetch user data
+  Future<void> _fetchUserData(User user) async {
+    try {
+      DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+
+      if (userDoc.exists) {
+        setState(() {
+          userName = userDoc['name'] ?? 'User';
+          userProfileImage = userDoc['profileImage'] ??
+              'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'; // Default image if no profile image exists
+          isLoading = false;
+        });
+      } else {
+        // If user document doesn't exist
+        setState(() {
+          userName = 'User';
+          userProfileImage = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'; // Default image
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching user data: $e');
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Listen to authentication state changes
+    _auth.authStateChanges().listen((User? user) {
+      if (user == null) {
+        // User is signed out, navigate to login screen
+        Navigator.pushReplacementNamed(context, '/login');
+      } else {
+        // User is signed in, fetch user data
+        _fetchUserData(user);
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    // If still loading, show a loading indicator
+    if (isLoading) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(
+            color: const Color(0xFFE74C3C),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.white,
+      drawer: Drawer(
+        child: Container(
+          color: const Color(0xFFFDEDEC), // Light reddish background
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // User Profile Section
+              DrawerHeader(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE74C3C), // Reddish-orange
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircleAvatar(
+                      radius: 40,
+                      backgroundImage: NetworkImage(userProfileImage!), // Profile image from CDN or user document
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      userName ?? 'User', // Display fetched username
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              // Sidebar Menu Items
+              ListTile(
+                leading: const Icon(Icons.person, color: Color(0xFFE74C3C)),
+                title: const Text('View Profile'),
+                onTap: () {
+                  Navigator.pushNamed(context, '/profile');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.info, color: Color(0xFFE74C3C)),
+                title: const Text('About'),
+                onTap: () {
+                  Navigator.pushNamed(context, '/about');
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.support, color: Color(0xFFE74C3C)),
+                title: const Text('Support'),
+                onTap: () {
+                  Navigator.pushNamed(context, '/support');
+                },
+              ),
+              const Spacer(),
+              // Logout Button
+              ListTile(
+                leading: const Icon(Icons.logout, color: Color(0xFFE74C3C)),
+                title: const Text('Logout'),
+                onTap: () async {
+                  await _auth.signOut();
+                  Navigator.pushReplacementNamed(context, '/login');
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
-        title: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Image.asset(
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Image.asset(
               'assets/images/home_screen/header/sandwich.png',
               width: 25,
               height: 25,
               fit: BoxFit.contain,
             ),
-            Image.asset(
-              'assets/images/home_screen/header/be_mindful.png',
-              width: 150,
-              height: 45,
-              fit: BoxFit.contain,
-            ),
-            Image.asset(
+            onPressed: () {
+              Scaffold.of(context).openDrawer();
+            },
+          ),
+        ),
+        title: Image.asset(
+          'assets/images/home_screen/header/be_mindful.png',
+          width: 150,
+          height: 45,
+          fit: BoxFit.contain,
+        ),
+        actions: [
+          IconButton(
+            icon: Image.asset(
               'assets/images/home_screen/header/bell.png',
               width: 25,
               height: 25,
               fit: BoxFit.contain,
             ),
-          ],
-        ),
+            onPressed: () {
+              // Handle bell icon action
+            },
+          ),
+        ],
       ),
       body: Container(
         color: Colors.white,
@@ -66,7 +213,6 @@ class HomeScreen extends StatelessWidget {
               }
 
               EdgeInsets rowMargin;
-              // Only rows 1 and 2 have bottom margin
               if (index == 1 || index == 2) {
                 rowMargin = const EdgeInsets.only(bottom: 12.0);
               } else {
@@ -98,91 +244,39 @@ class HomeScreen extends StatelessWidget {
                 return Container(
                   height: height,
                   margin: rowMargin,
-                  child: Row(
-                    children: [
-                      // Left column with purple.png and overlay button
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            Container(
-                              margin: const EdgeInsets.only(right: 8.0),
-                              child: Container(
-                                margin: const EdgeInsets.all(8.0),
-                                decoration: const BoxDecoration(
-                                  // Optional: Add any desired decoration here
-                                ),
-                                child: Image.asset(
-                                  'assets/images/home_screen/body/purple.png',
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                ),
-                              ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(context, '/chat');
+                            },
+                            child: Image.asset(
+                              'assets/images/home_screen/body/purple.png',
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                              height: double.infinity,
                             ),
-                            Positioned.fill(
-                              child: Container(
-                                margin: const EdgeInsets.all(8.0),
-                                decoration: const BoxDecoration(
-                                  color: Colors.transparent,
-                                ),
-                                child: TextButton(
-                                  onPressed: () {
-                                    // Define your button action here
-                                    print("Purple button pressed");
-                                    Navigator.pushNamed(context, '/chat');
-                                  },
-                                  style: TextButton.styleFrom(
-                                    backgroundColor: Colors.transparent, // Make button transparent to see the white container
-                                  ),
-                                  child: const SizedBox.shrink(),
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                      // Right column with cyan.png and overlay button
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            Container(
-                              margin: const EdgeInsets.only(right: 8.0),
-                              child: Container(
-                                margin: const EdgeInsets.all(8.0),
-                                decoration: const BoxDecoration(
-                                  // Optional: Add any desired decoration here
-                                ),
-                                child: Image.asset(
-                                  'assets/images/home_screen/body/cyan.png',
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                ),
-                              ),
+                        const SizedBox(width: 16.0),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              Navigator.pushNamed(context, '/journal');
+                            },
+                            child: Image.asset(
+                              'assets/images/home_screen/body/cyan.png',
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                              height: double.infinity,
                             ),
-                            Positioned.fill(
-                              child: Container(
-                                margin: const EdgeInsets.all(8.0),
-                                decoration: const BoxDecoration(
-                                  color: Colors.transparent,
-                                ),
-                                child: TextButton(
-                                  onPressed: () {
-                                    // Define your button action here
-                                    print("Cyan button pressed");
-                                    Navigator.pushNamed(context, '/journal');
-                                  },
-                                  style: TextButton.styleFrom(
-                                    backgroundColor: Colors.transparent, // Make button transparent to see the white container
-                                  ),
-                                  child: const SizedBox.shrink(),
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               }
@@ -192,89 +286,39 @@ class HomeScreen extends StatelessWidget {
                 return Container(
                   height: height,
                   margin: rowMargin,
-                  child: Row(
-                    children: [
-                      // Left column with red.png and overlay button
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            Container(
-                              margin: const EdgeInsets.only(right: 8.0),
-                              child: Container(
-                                margin: const EdgeInsets.all(8.0),
-                                decoration: const BoxDecoration(
-                                  // Optional: Add any desired decoration here
-                                ),
-                                child: Image.asset(
-                                  'assets/images/home_screen/body/red.png',
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                ),
-                              ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              // Implement your functionality
+                            },
+                            child: Image.asset(
+                              'assets/images/home_screen/body/red.png',
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                              height: double.infinity,
                             ),
-                            Positioned.fill(
-                              child: Container(
-                                margin: const EdgeInsets.all(8.0),
-                                decoration: const BoxDecoration(
-                                  color: Colors.transparent,
-                                ),
-                                child: TextButton(
-                                  onPressed: () {
-                                    // Define your button action here
-                                    print("Red button pressed");
-                                  },
-                                  style: TextButton.styleFrom(
-                                    backgroundColor: Colors.transparent, // Make button transparent to see the white container
-                                  ),
-                                  child: const SizedBox.shrink(),
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                      // Right column with grey.png and overlay button
-                      Expanded(
-                        child: Stack(
-                          children: [
-                            Container(
-                              margin: const EdgeInsets.only(right: 8.0),
-                              child: Container(
-                                margin: const EdgeInsets.all(8.0),
-                                decoration: const BoxDecoration(
-                                  // Optional: Add any desired decoration here
-                                ),
-                                child: Image.asset(
-                                  'assets/images/home_screen/body/grey.png',
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                  height: double.infinity,
-                                ),
-                              ),
+                        const SizedBox(width: 16.0),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () {
+                              // Implement your functionality
+                            },
+                            child: Image.asset(
+                              'assets/images/home_screen/body/grey.png',
+                              fit: BoxFit.contain,
+                              width: double.infinity,
+                              height: double.infinity,
                             ),
-                            Positioned.fill(
-                              child: Container(
-                                margin: const EdgeInsets.all(8.0),
-                                decoration: const BoxDecoration(
-                                  color: Colors.transparent,
-                                ),
-                                child: TextButton(
-                                  onPressed: () {
-                                    // Define your button action here
-                                    print("Grey button pressed");
-                                  },
-                                  style: TextButton.styleFrom(
-                                    backgroundColor: Colors.transparent, // Make button transparent to see the white container
-                                  ),
-                                  child: const SizedBox.shrink(),
-                                ),
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               }
@@ -299,7 +343,7 @@ class HomeScreen extends StatelessWidget {
                 );
               }
 
-              // Row 4 with emojis.png left-aligned with left and right margins
+              // Row 4 with emojis.png centered
               if (index == 4) {
                 return Container(
                   height: height,
@@ -353,8 +397,7 @@ class HomeScreen extends StatelessWidget {
                 );
               }
 
-              // Default case (optional)
-              return Container();
+              return Container(); // Default case
             }),
           ),
         ),

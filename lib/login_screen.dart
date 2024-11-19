@@ -75,20 +75,50 @@ class _LoginScreenState extends State<LoginScreen> {
 
       try {
         // Use Firebase Authentication to sign in with email and password
-        await _auth.signInWithEmailAndPassword(
+        UserCredential userCredential = await _auth.signInWithEmailAndPassword(
           email: _emailController.text.trim(),
           password: _passwordController.text.trim(),
         );
 
+        User? user = userCredential.user;
+
+        if (user != null) {
+          // User is logged in, navigate to home screen
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Login successful!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          Navigator.pushReplacementNamed(context, '/home');
+        } else {
+          // Handle unexpected null user
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Error: User not found.'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } on FirebaseAuthException catch (e) {
+        String errorMessage;
+        switch (e.code) {
+          case 'user-not-found':
+            errorMessage = 'No user found with this email.';
+            break;
+          case 'wrong-password':
+            errorMessage = 'Incorrect password.';
+            break;
+          default:
+            errorMessage = 'An error occurred. Please try again.';
+        }
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Login successful!'),
-            backgroundColor: Colors.green,
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
           ),
         );
-
-        // Navigate to Home Screen
-        Navigator.pushReplacementNamed(context, '/home');
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -143,8 +173,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       controller: _emailController,
                       decoration: InputDecoration(
                         labelText: 'Email',
-                        prefixIcon:
-                            const Icon(Icons.email, color: Color(0xFFD8432A)),
+                        prefixIcon: const Icon(Icons.email, color: Color(0xFFD8432A)),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -167,13 +196,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         obscureText: !_isPasswordVisible,
                         decoration: InputDecoration(
                           labelText: 'Password',
-                          prefixIcon:
-                              const Icon(Icons.lock, color: Color(0xFFD8432A)),
+                          prefixIcon: const Icon(Icons.lock, color: Color(0xFFD8432A)),
                           suffixIcon: IconButton(
                             icon: Icon(
-                              _isPasswordVisible
-                                  ? Icons.visibility
-                                  : Icons.visibility_off,
+                              _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
                               color: const Color(0xFFD8432A),
                             ),
                             onPressed: () {
@@ -201,9 +227,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           )
                         : ElevatedButton(
-                            onPressed: _isPasswordFieldVisible
-                                ? loginUser
-                                : checkEmailExists,
+                            onPressed: _isPasswordFieldVisible ? loginUser : checkEmailExists,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFE74C3C),
                               padding: const EdgeInsets.symmetric(vertical: 16),
