@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Chatbot extends StatefulWidget {
   const Chatbot({super.key});
@@ -18,7 +19,7 @@ class _ChatbotState extends State<Chatbot> {
   List<ChatUser> typing = [];
 
   final theurl =
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=';
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${dotenv.env['GEMINI_API_KEY']}';
   final header = {
     'Content-Type': 'application/json',
   };
