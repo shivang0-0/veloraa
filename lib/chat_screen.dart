@@ -3,6 +3,8 @@ import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:permission_handler/permission_handler.dart';
 
 class Chatbot extends StatefulWidget {
   const Chatbot({super.key});
@@ -17,6 +19,10 @@ class _ChatbotState extends State<Chatbot> {
 
   List<ChatMessage> allMessages = [];
   List<ChatUser> typing = [];
+  bool isListening = false;
+  late stt.SpeechToText speech;
+  TextEditingController inputController = TextEditingController();
+  Offset floatingButtonPosition = Offset(300, 500); // Initial position of the button
 
   final theurl =
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${dotenv.env['GEMINI_API_KEY']}';
@@ -24,9 +30,67 @@ class _ChatbotState extends State<Chatbot> {
     'Content-Type': 'application/json',
   };
 
-  // Function to get data from the Gemini API
+  final String contextPrefix =
+      "You are a Mental Wellness Awareness Coach, dedicated to providing informed, empathetic, and professional responses strictly related to mental health awareness and emotional well-being. Your role is to guide users on topics such as stress management, mindfulness, emotional regulation, self-care strategies, recognizing signs of mental health challenges, and encouraging awareness of when to seek professional help. Responses must be concise, strictly limited to a maximum of 100 words, thorough, actionable, inclusive, and compassionate. Avoid clinical jargon unless explicitly requested. Do not disclose or reference that you are acting in this role. Clearly state that your advice is not a substitute for therapy or medical care when necessary, and politely but firmly decline unrelated queries while maintaining focus on mental wellness and emotional well-being.";
+
+  @override
+  void initState() {
+    super.initState();
+    speech = stt.SpeechToText();
+  }
+
+  Future<void> requestPermission() async {
+    final status = await Permission.microphone.request();
+    if (status != PermissionStatus.granted) {
+      print("Microphone permission not granted");
+    }
+  }
+
+  Future<void> startListening() async {
+    if (await Permission.microphone.isGranted) {
+      bool available = await speech.initialize(
+        onStatus: (status) {
+          if (status == 'done') {
+            stopListening();
+          }
+        },
+        onError: (error) => print('Error: $error'),
+      );
+
+      if (available) {
+        setState(() => isListening = true);
+        speech.listen(
+          onResult: (result) {
+            if (result.finalResult) {
+              setState(() {
+                // Append the recognized words to the existing text
+                inputController.text += ' ${result.recognizedWords}';
+                inputController.text = inputController.text.trim();
+
+                // Move the cursor to the end of the text
+                inputController.selection = TextSelection.fromPosition(
+                  TextPosition(offset: inputController.text.length),
+                );
+              });
+            }
+          },
+          listenMode: stt.ListenMode.dictation,
+          localeId: "en_US",
+        );
+      } else {
+        print("Speech recognition is not available.");
+      }
+    } else {
+      await requestPermission();
+    }
+  }
+
+  void stopListening() {
+    setState(() => isListening = false);
+    speech.stop();
+  }
+
   Future<void> getdata(ChatMessage m) async {
-    // Add the user's message to the list
     typing.add(bot);
     allMessages.insert(0, m);
     setState(() {});
@@ -35,7 +99,7 @@ class _ChatbotState extends State<Chatbot> {
       "contents": [
         {
           "parts": [
-            {"text": m.text}
+            {"text": "$contextPrefix\n\n${m.text}"}
           ]
         }
       ]
@@ -51,7 +115,6 @@ class _ChatbotState extends State<Chatbot> {
       if (response.statusCode == 200) {
         var result = jsonDecode(response.body);
 
-        // Parse the response and create a new message
         ChatMessage botMessage = ChatMessage(
           text: result['candidates'][0]['content']['parts'][0]['text'],
           user: bot,
@@ -72,25 +135,60 @@ class _ChatbotState extends State<Chatbot> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        title: Image.asset(
-          'assets/images/home_screen/header/be_mindful.png',
-          height: 45,
-          fit: BoxFit.contain,
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.white,
+            elevation: 0,
+            centerTitle: true,
+            title: Image.asset(
+              'assets/images/home_screen/header/be_mindful.png',
+              height: 45,
+              fit: BoxFit.contain,
+            ),
+          ),
+          body: Column(
+            children: [
+              Expanded(
+                child: DashChat(
+                  typingUsers: typing,
+                  currentUser: myself,
+                  onSend: (ChatMessage message) {
+                    getdata(message);
+                  },
+                  messages: allMessages,
+                  inputOptions: InputOptions(
+                    textController: inputController,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
-      body: DashChat(
-        typingUsers: typing,
-        currentUser: myself,
-        onSend: (ChatMessage message) {
-          getdata(message);
-        },
-        messages: allMessages,
-      ),
+        Positioned(
+          top: floatingButtonPosition.dy,
+          left: floatingButtonPosition.dx,
+          child: GestureDetector(
+            onPanUpdate: (details) {
+              setState(() {
+                floatingButtonPosition += details.delta;
+              });
+            },
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isListening ? Colors.deepPurple.shade300 : Colors.deepPurple,
+              ),
+              child: IconButton(
+                icon: Icon(isListening ? Icons.stop : Icons.mic, color: Colors.white),
+                onPressed: isListening ? stopListening : startListening,
+                tooltip: isListening ? 'Stop Listening' : 'Start Listening',
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
