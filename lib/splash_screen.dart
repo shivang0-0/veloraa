@@ -21,7 +21,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
     // Navigate to MainScreen after 3 seconds
     Timer(const Duration(seconds: 3), () {
-      Navigator.pushReplacementNamed(context, '/home');
+      Navigator.pushReplacementNamed(context, '/login');
     });
   }
 

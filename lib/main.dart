@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'splash_screen.dart';
 import 'home_screen.dart';
 import 'journal_screen.dart';
 import 'chat_screen.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'signup_screen.dart';
+import 'login_screen.dart';
 
 // ...
 
@@ -34,6 +36,8 @@ class VeloraApp extends StatelessWidget {
         '/home': (context) => HomeScreen(),
         '/journal': (context) => JournalScreen(),
         '/chat': (context) => Chatbot(),
+        '/signup' : (context) => SignupScreen(),
+        '/login' : (context) => LoginScreen(),
       },
     );
   }
