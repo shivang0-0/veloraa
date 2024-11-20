@@ -21,7 +21,8 @@ class _HomeScreenState extends State<HomeScreen> {
   // Method to fetch user data
   Future<void> _fetchUserData(User user) async {
     try {
-      DocumentSnapshot userDoc = await _firestore.collection('users').doc(user.uid).get();
+      DocumentSnapshot userDoc =
+          await _firestore.collection('users').doc(user.uid).get();
 
       if (userDoc.exists) {
         setState(() {
@@ -34,7 +35,8 @@ class _HomeScreenState extends State<HomeScreen> {
         // If user document doesn't exist
         setState(() {
           userName = 'User';
-          userProfileImage = 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'; // Default image
+          userProfileImage =
+              'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'; // Default image
           isLoading = false;
         });
       }
@@ -93,7 +95,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     CircleAvatar(
                       radius: 40,
-                      backgroundImage: NetworkImage(userProfileImage!), // Profile image from CDN or user document
+                      backgroundImage: NetworkImage(
+                          userProfileImage!), // Profile image from CDN or user document
                     ),
                     const SizedBox(height: 10),
                     Text(
@@ -387,11 +390,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 return Container(
                   height: height,
                   margin: rowMargin,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Image.asset(
-                      'assets/images/home_screen/body/video.png',
-                      fit: BoxFit.contain,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.pushNamed(context, '/video');
+                    },
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: Image.asset(
+                        'assets/images/home_screen/body/video.png',
+                        fit: BoxFit.contain,
+                      ),
                     ),
                   ),
                 );

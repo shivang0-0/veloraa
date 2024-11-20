@@ -9,6 +9,7 @@ import 'chat_screen.dart';
 import 'signup_screen.dart';
 import 'login_screen.dart';
 import 'profile_screen.dart';
+import 'video_screen.dart';
 
 // ...
 
@@ -40,6 +41,7 @@ class VeloraApp extends StatelessWidget {
         '/signup' : (context) => SignupScreen(),
         '/login' : (context) => LoginScreen(),
         '/profile' : (context) => ProfileScreen(),
+        '/video' : (context) => VideoScreen(),
       },
     );
   }
