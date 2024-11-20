@@ -157,6 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
               width: 25,
               height: 25,
               fit: BoxFit.contain,
+              semanticLabel: 'Menu Button',
             ),
             onPressed: () {
               Scaffold.of(context).openDrawer();
@@ -168,6 +169,7 @@ class _HomeScreenState extends State<HomeScreen> {
           width: 150,
           height: 45,
           fit: BoxFit.contain,
+          semanticLabel: 'Be Mindful',
         ),
         actions: [
           IconButton(
@@ -176,9 +178,16 @@ class _HomeScreenState extends State<HomeScreen> {
               width: 25,
               height: 25,
               fit: BoxFit.contain,
+              semanticLabel: 'Notifications Button',
             ),
             onPressed: () {
               // Handle bell icon action
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('No new notifications!'),
+                  backgroundColor: Colors.blue,
+                ),
+              );
             },
           ),
         ],
@@ -236,6 +245,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: height,
                         width: 150,
                         fit: BoxFit.contain,
+                        semanticLabel: 'Let\'s begin healing',
                       ),
                     ),
                   ),
@@ -261,6 +271,8 @@ class _HomeScreenState extends State<HomeScreen> {
                               fit: BoxFit.contain,
                               width: double.infinity,
                               height: double.infinity,
+                              semanticLabel:
+                                  'Artifical Intelligence Chat Feature Button',
                             ),
                           ),
                         ),
@@ -275,6 +287,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               fit: BoxFit.contain,
                               width: double.infinity,
                               height: double.infinity,
+                              semanticLabel: 'Journal Feature Button',
                             ),
                           ),
                         ),
@@ -296,13 +309,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         Expanded(
                           child: GestureDetector(
                             onTap: () {
-                              // Implement your functionality
+                              Navigator.pushNamed(context, '/doctor');
                             },
                             child: Image.asset(
                               'assets/images/home_screen/body/red.png',
                               fit: BoxFit.contain,
                               width: double.infinity,
                               height: double.infinity,
+                              semanticLabel:
+                                  'Doctor\'s Appointment Feature Button',
                             ),
                           ),
                         ),
@@ -310,13 +325,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         Expanded(
                           child: GestureDetector(
                             onTap: () {
-                              // Implement your functionality
+                              Navigator.pushNamed(context, '/selflearning');
                             },
                             child: Image.asset(
                               'assets/images/home_screen/body/grey.png',
                               fit: BoxFit.contain,
                               width: double.infinity,
                               height: double.infinity,
+                              semanticLabel: 'Self-Learning Feature Button',
                             ),
                           ),
                         ),
@@ -340,6 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: height,
                         width: 150,
                         fit: BoxFit.contain,
+                        semanticLabel: 'How are you feeling?',
                       ),
                     ),
                   ),
@@ -348,17 +365,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Row 4 with emojis.png centered
               if (index == 4) {
-                return Container(
-                  height: height,
-                  margin: rowMargin,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Align(
-                      alignment: Alignment.center,
-                      child: Image.asset(
-                        'assets/images/home_screen/body/emojis.png',
-                        height: 40,
-                        fit: BoxFit.contain,
+                return GestureDetector(
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Response Recorded!')),
+                    );
+                  },
+                  child: Container(
+                    height: height,
+                    margin: rowMargin,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Align(
+                        alignment: Alignment.center,
+                        child: Image.asset(
+                          'assets/images/home_screen/body/emojis.png',
+                          height: 40,
+                          fit: BoxFit.contain,
+                          semanticLabel: 'Emotions Feedback Buttons',
+                        ),
                       ),
                     ),
                   ),
@@ -379,6 +404,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         height: 20,
                         width: 100,
                         fit: BoxFit.contain,
+                        semanticLabel: 'Daily Videos',
                       ),
                     ),
                   ),
@@ -396,9 +422,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     child: Align(
                       alignment: Alignment.center,
-                      child: Image.asset(
-                        'assets/images/home_screen/body/video.png',
-                        fit: BoxFit.contain,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(
+                            20), // Set your desired corner radius here
+                        child: Image.asset(
+                          'assets/images/home_screen/body/video.png',
+                          fit: BoxFit.contain,
+                          semanticLabel: 'Daily Videos Button',
+                        ),
                       ),
                     ),
                   ),

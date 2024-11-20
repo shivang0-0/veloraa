@@ -22,7 +22,8 @@ class _ChatbotState extends State<Chatbot> {
   bool isListening = false;
   late stt.SpeechToText speech;
   TextEditingController inputController = TextEditingController();
-  Offset floatingButtonPosition = Offset(300, 500); // Initial position of the button
+  Offset floatingButtonPosition =
+      Offset(300, 500); // Initial position of the button
 
   final theurl =
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${dotenv.env['GEMINI_API_KEY']}';
@@ -37,6 +38,7 @@ class _ChatbotState extends State<Chatbot> {
   void initState() {
     super.initState();
     speech = stt.SpeechToText();
+    getWelcomeMessage(); // Call the function to get the welcome message
   }
 
   Future<void> requestPermission() async {
@@ -88,6 +90,51 @@ class _ChatbotState extends State<Chatbot> {
   void stopListening() {
     setState(() => isListening = false);
     speech.stop();
+  }
+
+  Future<void> getWelcomeMessage() async {
+    typing.add(bot);
+    setState(() {});
+
+    var data = {
+      "contents": [
+        {
+          "parts": [
+            {
+              "text":
+                  "$contextPrefix\n\nAs the assistant, please write a welcome message to the user, following the above instructions."
+            }
+          ]
+        }
+      ]
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(theurl),
+        headers: header,
+        body: jsonEncode(data),
+      );
+
+      if (response.statusCode == 200) {
+        var result = jsonDecode(response.body);
+
+        ChatMessage botMessage = ChatMessage(
+          text: result['candidates'][0]['content']['parts'][0]['text'],
+          user: bot,
+          createdAt: DateTime.now(),
+        );
+
+        allMessages.insert(0, botMessage);
+      } else {
+        print("Error: Response status code ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error occurred: $e");
+    }
+
+    typing.remove(bot);
+    setState(() {});
   }
 
   Future<void> getdata(ChatMessage m) async {
@@ -178,10 +225,13 @@ class _ChatbotState extends State<Chatbot> {
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isListening ? Colors.deepPurple.shade300 : Colors.deepPurple,
+                color: isListening
+                    ? Colors.deepPurple.shade300
+                    : Colors.deepPurple,
               ),
               child: IconButton(
-                icon: Icon(isListening ? Icons.stop : Icons.mic, color: Colors.white),
+                icon: Icon(
+                    isListening ? Icons.stop : Icons.mic, color: Colors.white),
                 onPressed: isListening ? stopListening : startListening,
                 tooltip: isListening ? 'Stop Listening' : 'Start Listening',
               ),
